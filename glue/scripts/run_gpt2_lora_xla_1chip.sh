@@ -46,4 +46,5 @@ python src/run_glue.py \
   --ignore_mismatched_sizes \
   --keep_checkpoints eval \
   --overwrite_output_dir \
-  --save_total_limit 1
+  --save_total_limit 1 \
+  "$@"
