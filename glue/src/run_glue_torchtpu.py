@@ -9,12 +9,17 @@ TPU = torch.device("tpu")
 
 from transformers import training_args as _ta  # noqa: E402
 
-_ta.TrainingArguments.device = property(lambda self: TPU)
-_ta.TrainingArguments.n_gpu = property(lambda self: 1)
+# keep the original property getters (they run _setup_devices, which also creates
+# distributed_state) and only replace the device they return
+_orig_device = _ta.TrainingArguments.device.fget
+_orig_n_gpu = _ta.TrainingArguments.n_gpu.fget
+_ta.TrainingArguments.device = property(lambda self: (_orig_device(self), TPU)[1])
+_ta.TrainingArguments.n_gpu = property(lambda self: (_orig_n_gpu(self), 1)[1])
 
 from accelerate import state as _st  # noqa: E402
 
-_st.PartialState.device = property(lambda self: TPU)
+_orig_ps_device = _st.PartialState.device.fget
+_st.PartialState.device = property(lambda self: (_orig_ps_device(self), TPU)[1])
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import run_glue  # noqa: E402
